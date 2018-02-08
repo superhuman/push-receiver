@@ -129,6 +129,7 @@ module.exports = class Client extends EventEmitter {
   }
 
   _onParserError(error) {
+    this.emit('parserError', error)
     this._retry();
     console.error(error);
   }
