@@ -145,7 +145,13 @@ module.exports = class Client extends EventEmitter {
       return;
     }
 
-    const message = decrypt(object, this._credentials.keys);
+    let message
+    try {
+      message = decrypt(object, this._credentials.keys);
+    } catch (error) {
+      error.metaData = {message: JSON.stringify(object)}
+      throw error
+    }
     // Maintain persistentIds updated with the very last received value
     this._persistentIds.push(object.persistentId);
     // Send notification
