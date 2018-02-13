@@ -149,7 +149,7 @@ module.exports = class Client extends EventEmitter {
     try {
       message = decrypt(object, this._credentials.keys);
     } catch (error) {
-      error.metaData = {message: JSON.stringify(object)}
+      error.metaData = {message: JSON.stringify(object), keys: JSON.stringify(this._credentials.keys)}
       throw error
     }
     // Maintain persistentIds updated with the very last received value
