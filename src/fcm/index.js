@@ -1,6 +1,10 @@
 const crypto = require('crypto');
 const request = require('request-promise');
+const log = require('electron-log');
 const { escape } = require('../utils/base64');
+
+log.transports.console.level = 'info';
+log.transports.file.level = 'info';
 
 const FCM_SUBSCRIBE = 'https://fcm.googleapis.com/fcm/connect/subscribe';
 const FCM_ENDPOINT = 'https://fcm.googleapis.com/fcm/send';
@@ -9,6 +13,7 @@ module.exports = registerFCM;
 
 async function registerFCM({ senderId, token }) {
   const keys = await createKeys();
+  log.info('CREATED KEYS', keys)
   const response = await request({
     url     : FCM_SUBSCRIBE,
     method  : 'POST',
