@@ -18,14 +18,8 @@ async function registerFCM({ senderId, token }) {
     form : {
       authorized_entity : senderId,
       endpoint          : `${FCM_ENDPOINT}/${token}`,
-      encryption_key    : keys.publicKey
-        .replace(/=/g, '')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_'),
+      encryption_key    : keys.publicKey,
       encryption_auth : keys.authSecret
-        .replace(/=/g, '')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_'),
     },
   });
   return {
@@ -43,9 +37,9 @@ function createKeys() {
         return reject(err);
       }
       return resolve({
-        privateKey : escape(dh.getPrivateKey('base64')),
-        publicKey  : escape(dh.getPublicKey('base64')),
-        authSecret : escape(buf.toString('base64')),
+        privateKey : dh.getPrivateKey('base64'),
+        publicKey  : dh.getPublicKey('base64'),
+        authSecret : buf.toString('base64'),
       });
     });
   });
