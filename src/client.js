@@ -150,42 +150,15 @@ module.exports = class Client extends EventEmitter {
     try {
       message = decrypt(object, this._credentials.keys);
     } catch (error) {
-      // NOTE(ibash) we seem to be getting errors while decrypting. I want to
-      // know if these errors are recoverable, whether it's just a single
-      // notification that will fail or if it's all notifications going forward.
-      // So we keep track of whether we've just seen a failed notification and
-      // whether we get a notification that goes through after that.
-
-      // Put the object in _persistentIds so we ignore a failed notification next time
-      this._persistentIds.push(object.persistentId);
-
-      // For detecting whether we can recover after failing to decrypt
-      this._failedToDecrypt = {object: object, keys: this._credentials.keys}
-
-      error.metaData = {message: JSON.stringify(object), keys: JSON.stringify(this._credentials.keys)}
-      // throw in a setTimeout s.t. bugsnag can catch the error, but we don't
-      // want to break the connection
-      setTimeout(() => {
+      if (error.message.includes('Unsupported state or unable to authenticate data')) {
+        // NOTE(ibash) Periodically we're unable to decrypt notifications. In
+        // all cases we've been able to receive future notifications using the
+        // same keys. So, we sliently drop this notification.
+        this._persistentIds.push(object.persistentId);
+        return
+      } else {
         throw error
-      }, 0)
-      return
-    }
-
-    // detect if we've recovered from a failed notification
-    if (this._failedToDecrypt && this._credentials.keys.privateKey == this._failedToDecrypt.keys.privateKey) {
-      let failedToDecrypt = this._failedToDecrypt
-      this._failedToDecrypt = null
-      let keys = this._credentials.keys
-      setTimeout(() => {
-        // HACK(ibash) this should really log somewhere instead but ... bugsnag
-        // is my log :D
-        let error = new Error('Recovered from failure to decrypt notification')
-        error.metaData = {
-          failed: {message: JSON.stringify(failedToDecrypt.object), keys: JSON.stringify(failedToDecrypt.keys)},
-          succeeded: {message: JSON.stringify(object), keys: JSON.stringify(keys)},
-        }
-        throw error
-      }, 0)
+      }
     }
 
     // Maintain persistentIds updated with the very last received value
