@@ -155,6 +155,13 @@ module.exports = class Client extends EventEmitter {
         // all cases we've been able to receive future notifications using the
         // same keys. So, we sliently drop this notification.
         this._persistentIds.push(object.persistentId);
+
+        // NOTE(ibash) for superhuman we want to keep an eye on these errors -
+        // so throw them in their own call stack so that they get caught by
+        // bugsnag.
+        setTimeout(() => {
+          throw error
+        }, 0)
         return
       } else {
         throw error
