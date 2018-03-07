@@ -5,7 +5,7 @@ const decrypt = require('./utils/decrypt');
 const path = require('path');
 const tls = require('tls');
 const {checkIn} = require('./gcm');
-const {kMCSVersion, kLoginRequestTag} = require('./constants');
+const {kMCSVersion, kLoginRequestTag, kDataMessageStanzaTag, kLoginResponseTag} = require('./constants');
 const {load} = require('protobufjs');
 
 const HOST = 'mtalk.google.com';
@@ -30,7 +30,7 @@ module.exports = class Client extends EventEmitter {
     this._onSocketConnect = this._onSocketConnect.bind(this);
     this._onSocketClose = this._onSocketClose.bind(this);
     this._onSocketError = this._onSocketError.bind(this);
-    this._onDataMessage = this._onDataMessage.bind(this);
+    this._onMessage = this._onMessage.bind(this);
     this._onParserError = this._onParserError.bind(this);
   }
 
@@ -44,7 +44,7 @@ module.exports = class Client extends EventEmitter {
     // can happen if the socket immediately closes after being created
     if (!this._socket) { return }
     this._parser = new Parser(this._socket);
-    this._parser.on('dataMessage', this._onDataMessage);
+    this._parser.on('message', this._onMessage);
     this._parser.on('error', this._onParserError);
   }
 
@@ -76,7 +76,7 @@ module.exports = class Client extends EventEmitter {
       this._socket = null;
     }
     if (this._parser) {
-      this._parser.removeListener('dataMessage', this._onDataMessage);
+      this._parser.removeListener('message', this._onMessage);
       this._parser.removeListener('error', this._onParserError);
       this._parser.destroy();
       this._parser = null;
@@ -100,8 +100,7 @@ module.exports = class Client extends EventEmitter {
       setting              : [{name : 'new_vc', value : '1'}],
       // Id of the last notification received
       clientEvent          : [],
-      // FIXME Figure out how to pass persistentIds without being kickout by Google
-      receivedPersistentId : [],
+      receivedPersistentId : this._persistentIds,
     };
 
     const errorMessage = LoginRequestType.verify(loginRequest);
@@ -139,6 +138,16 @@ module.exports = class Client extends EventEmitter {
     this._destroy();
     const timeout = Math.min(++this._retryCount, MAX_RETRY_TIMEOUT) * 1000;
     this._retryTimeout = setTimeout(this.connect.bind(this), timeout);
+  }
+
+  _onMessage({tag, object}) {
+    if (tag === kLoginResponseTag) {
+      // clear persistent ids, as we just sent them to the server while logging
+      // in
+      this._persistentIds = []
+    } else if (tag === kDataMessageStanzaTag) {
+      this._onDataMessage(object)
+    }
   }
 
   _onDataMessage(object) {
