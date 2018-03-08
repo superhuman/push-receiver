@@ -52,6 +52,10 @@ module.exports = class Client extends EventEmitter {
     this._destroy();
   }
 
+  getPersistentIds() {
+    return this._persistentIds
+  }
+
   async _checkIn() {
     return checkIn(this._credentials.gcm.androidId, this._credentials.gcm.securityToken);
   }
@@ -181,9 +185,8 @@ module.exports = class Client extends EventEmitter {
     this._persistentIds.push(object.persistentId);
     // Send notification
     this.emit('ON_NOTIFICATION_RECEIVED', {
+      client: this,
       notification : message,
-      // Needs to be saved by the client
-      persistentId : object.persistentId,
     });
   }
 };
