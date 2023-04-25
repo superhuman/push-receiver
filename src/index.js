@@ -7,7 +7,7 @@ module.exports = {
 };
 
 async function listen(credentials, notificationCallback, options = {}) {
-  const { socketTimeout } = options;
+  const { socketTimeout, socketKeepAliveDelay } = options;
 
   if (!credentials) {
     throw new Error('Missing credentials');
@@ -34,6 +34,7 @@ async function listen(credentials, notificationCallback, options = {}) {
   const client = new Client(credentials, {
     persistentIds : credentials.persistentIds,
     socketTimeout,
+    socketKeepAliveDelay,
   });
   client.on('ON_NOTIFICATION_RECEIVED', notificationCallback);
   client.connect();
