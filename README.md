@@ -37,15 +37,24 @@ You can use [electron-push-receiver](https://github.com/MatthieuLemoine/electron
 ### Node
 
 ```javascript
-const { register, listen } = require('push-receiver');
+const { register, listen } = require('push-receiver-v2');
+
+// Firebase config
+const config = {
+  firebase: {
+    apiKey: "XXxxXxX0x0x-Xxxx0-X0Xxxxx_0xxXx_XX0xXxX",
+    appID: "1:000000000000:android:xxx0xxxx0000x000xxx000",
+    projectID: "the-app-name"
+  },
+  vapidKey: '' // optional
+};
 
 // First time
 // Register to GCM and FCM
-const credentials = await register(senderId); // You should call register only once and then store the credentials somewhere
+const credentials = await register(config); // You should call register only once and then store the credentials somewhere
 storeCredentials(credentials) // Store credentials to use it later
 const fcmToken = credentials.fcm.token; // Token to use to send notifications
 sendTokenToBackendOrWhatever(fcmToken);
-
 
 // Next times
 const credentials = getSavedCredentials() // get your saved credentials from somewhere (file, db, etc...)
@@ -69,3 +78,5 @@ To test, you can use the [send script](scripts/send/index.js) provided in this r
 ```
 node scripts/send --serverKey="<FIREBASE_SERVER_KEY>" --token="<FIREBASE_TOKEN>"
 ```
+
+Note: The `send` endpoint is deprecated and removed as of June 20, 2024: https://firebase.google.com/support/faq#fcm-depr-features

@@ -1,14 +1,33 @@
 const { register } = require('../../src');
-const senderId = require('yargs').argv.senderId;
+const apiKey = require('yargs').argv.apiKey;
+const appID = require('yargs').argv.appID;
+const projectID = require('yargs').argv.projectID;
 
-if (!senderId) {
-  console.error('Missing senderId');
+if (!apiKey) {
+  console.error('Missing apiKey');
+  return;
+}
+else if (!appID) {
+  console.error('Missing appID');
+  return;
+}
+else if (!projectID) {
+  console.error('Missing projectID');
   return;
 }
 
+const config = {
+  firebase: {
+    apiKey,
+    appID,
+    projectID
+  },
+  vapidKey: ''
+};
+
 (async () => {
   try {
-    await register(senderId);
+    await register(config);
     console.log('Successfully registered');
   } catch (e) {
     console.error('Error during registration');
