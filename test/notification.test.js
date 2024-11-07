@@ -1,4 +1,3 @@
-const request = require('request-promise');
 const { SENDER_ID, SERVER_KEY } = require('./keys');
 const { register, listen } = require('../src/index');
 
@@ -57,24 +56,32 @@ describe('Parser', function() {
 });
 
 async function send(notification) {
-  const response = await request({
-    method : 'POST',
-    url    : 'https://fcm.googleapis.com/fcm/send',
-    json   : true,
-    body   : {
-      to           : credentials.fcm.token,
-      notification : notification,
-    },
-    headers : { Authorization : `key=${SERVER_KEY}` },
-  });
   try {
-    expect(response.success).toEqual(1);
-  } catch (e) {
+    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+      method  : 'POST',
+      headers : {
+        'Content-Type'  : 'application/json',
+        'Authorization' : `key=${SERVER_KEY}`,
+      },
+      body : JSON.stringify({
+        to           : credentials.fcm.token,
+        notification : notification,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success !== 1) {
+      throw new Error(`sending of notification failed: ${JSON.stringify(data)}`);
+    }
+
+    return data;
+  } catch (error) {
+    // This will catch both fetch errors and our custom error
     throw new Error(
-      `sending of notification failed: ${JSON.stringify(response)}`
+      `sending of notification failed: ${error.message}`
     );
   }
-  return response;
 }
 
 async function receive(n) {

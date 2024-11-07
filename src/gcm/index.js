@@ -1,5 +1,4 @@
 const path = require('path');
-const request = require('../utils/request');
 const protobuf = require('protobufjs');
 const Long = require('long');
 const { waitFor } = require('../utils/timeout');
@@ -8,8 +7,8 @@ const { toBase64 } = require('../utils/base64');
 
 // Hack to fix PHONE_REGISTRATION_ERROR #17 when bundled with webpack
 // https://github.com/dcodeIO/protobuf.js#browserify-integration
-protobuf.util.Long = Long
-protobuf.configure()
+protobuf.util.Long = Long;
+protobuf.configure();
 
 const serverKey = toBase64(Buffer.from(fcmKey));
 
@@ -33,15 +32,14 @@ async function register(appId) {
 async function checkIn(androidId, securityToken) {
   await loadProtoFile();
   const buffer = getCheckinRequest(androidId, securityToken);
-  const body = await request({
-    url     : CHECKIN_URL,
+  const response = await fetch(CHECKIN_URL, {
     method  : 'POST',
     headers : {
       'Content-Type' : 'application/x-protobuf',
     },
-    body     : buffer,
-    encoding : null,
+    body : buffer,
   });
+  const body = await response.arrayBuffer();
   const message = AndroidCheckinResponse.decode(body);
   const object = AndroidCheckinResponse.toObject(message, {
     longs : String,
@@ -69,16 +67,17 @@ async function doRegister({ androidId, securityToken }, appId) {
 }
 
 async function postRegister({ androidId, securityToken, body, retry = 0 }) {
-  const response = await request({
-    url     : REGISTER_URL,
+  const response = await fetch(REGISTER_URL, {
     method  : 'POST',
     headers : {
-      Authorization  : `AidLogin ${androidId}:${securityToken}`,
-      'Content-Type' : 'application/x-www-form-urlencoded',
+      'Authorization' : `AidLogin ${androidId}:${securityToken}`,
+      'Content-Type'  : 'application/x-www-form-urlencoded',
     },
-    form : body,
+    body : new URLSearchParams(body).toString(),
   });
-  if (response.includes('Error')) {
+  const responseBody = await response.text();
+
+  if (responseBody.includes('Error')) {
     console.warn(`Register request has failed with ${response}`);
     if (retry >= 5) {
       throw new Error('GCM register has failed');
@@ -87,7 +86,7 @@ async function postRegister({ androidId, securityToken, body, retry = 0 }) {
     await waitFor(1000);
     return postRegister({ androidId, securityToken, body, retry : retry + 1 });
   }
-  return response;
+  return responseBody;
 }
 
 async function loadProtoFile() {

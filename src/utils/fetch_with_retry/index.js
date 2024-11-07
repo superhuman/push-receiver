@@ -1,4 +1,3 @@
-const request = require('request-promise');
 const { waitFor } = require('../timeout');
 
 // In seconds
@@ -6,15 +5,13 @@ const MAX_RETRY_TIMEOUT = 15;
 // Step in seconds
 const RETRY_STEP = 5;
 
-module.exports = requestWithRety;
-
-function requestWithRety(...args) {
+function fetchWithRety(...args) {
   return retry(0, ...args);
 }
 
 async function retry(retryCount = 0, ...args) {
   try {
-    const result = await request(...args);
+    const result = await fetch(...args);
     return result;
   } catch (e) {
     const timeout = Math.min(retryCount * RETRY_STEP, MAX_RETRY_TIMEOUT);
@@ -25,3 +22,5 @@ async function retry(retryCount = 0, ...args) {
     return result;
   }
 }
+
+module.exports = fetchWithRety;
