@@ -60,8 +60,8 @@ async function send(notification) {
     const response = await fetch('https://fcm.googleapis.com/fcm/send', {
       method  : 'POST',
       headers : {
-        'Content-Type'  : 'application/json',
-        'Authorization' : `key=${SERVER_KEY}`,
+        'Content-Type' : 'application/json',
+        Authorization  : `key=${SERVER_KEY}`,
       },
       body : JSON.stringify({
         to           : credentials.fcm.token,
@@ -72,15 +72,15 @@ async function send(notification) {
     const data = await response.json();
 
     if (data.success !== 1) {
-      throw new Error(`sending of notification failed: ${JSON.stringify(data)}`);
+      throw new Error(
+        `sending of notification failed: ${JSON.stringify(data)}`
+      );
     }
 
     return data;
   } catch (error) {
     // This will catch both fetch errors and our custom error
-    throw new Error(
-      `sending of notification failed: ${error.message}`
-    );
+    throw new Error(`sending of notification failed: ${error.message}`);
   }
 }
 

@@ -70,8 +70,8 @@ async function postRegister({ androidId, securityToken, body, retry = 0 }) {
   const response = await fetch(REGISTER_URL, {
     method  : 'POST',
     headers : {
-      'Authorization' : `AidLogin ${androidId}:${securityToken}`,
-      'Content-Type'  : 'application/x-www-form-urlencoded',
+      Authorization  : `AidLogin ${androidId}:${securityToken}`,
+      'Content-Type' : 'application/x-www-form-urlencoded',
     },
     body : new URLSearchParams(body).toString(),
   });

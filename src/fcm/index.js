@@ -20,47 +20,57 @@ function generateFirebaseFID() {
 }
 
 async function installFCM(config) {
-  const response = await fetch(`${FIREBASE_INSTALLATION}projects/${config.firebase.projectID}/installations`, {
-    method  : 'POST',
-    headers : {
-      'Content-Type'      : 'application/json',
-      'x-firebase-client' : btoa(JSON.stringify({ heartbeats : [], version : 2 })).toString('base64'),
-      'x-goog-api-key'    : config.firebase.apiKey,
-    },
-    body : JSON.stringify({
-      appId       : config.firebase.appID,
-      authVersion : 'FIS_v2',
-      fid         : generateFirebaseFID(),
-      sdkVersion  : 'w:0.6.4',
-    }),
-  });
+  const response = await fetch(
+    `${FIREBASE_INSTALLATION}projects/${
+      config.firebase.projectID
+    }/installations`,
+    {
+      method  : 'POST',
+      headers : {
+        'Content-Type'      : 'application/json',
+        'x-firebase-client' : btoa(
+          JSON.stringify({ heartbeats : [], version : 2 })
+        ).toString('base64'),
+        'x-goog-api-key' : config.firebase.apiKey,
+      },
+      body : JSON.stringify({
+        appId       : config.firebase.appID,
+        authVersion : 'FIS_v2',
+        fid         : generateFirebaseFID(),
+        sdkVersion  : 'w:0.6.4',
+      }),
+    }
+  );
   return response;
 }
 
 async function registerFCM(config) {
   const keys = await createKeys();
-  const response = await fetch(`${FCM_REGISTRATION}projects/${config.firebase.projectID}/registrations`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': config.firebase.apiKey,
-      'x-goog-firebase-installations-auth': config.authToken,
-    },
-    body: JSON.stringify({
-      web: {
-        applicationPubKey: config.vapidKey,
-        auth: keys.authSecret
-          .replace(/=/g, '')
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_'),
-        endpoint: `${FCM_ENDPOINT}/${config.token}`,
-        p256dh: keys.publicKey
-          .replace(/=/g, '')
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_'),
+  const response = await fetch(
+    `${FCM_REGISTRATION}projects/${config.firebase.projectID}/registrations`,
+    {
+      method  : 'POST',
+      headers : {
+        'Content-Type'                       : 'application/json',
+        'x-goog-api-key'                     : config.firebase.apiKey,
+        'x-goog-firebase-installations-auth' : config.authToken,
       },
-    }),
-  });
+      body : JSON.stringify({
+        web : {
+          applicationPubKey : config.vapidKey,
+          auth              : keys.authSecret
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_'),
+          endpoint : `${FCM_ENDPOINT}/${config.token}`,
+          p256dh   : keys.publicKey
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_'),
+        },
+      }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
