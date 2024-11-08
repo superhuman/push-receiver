@@ -1,4 +1,4 @@
-const request = require('request-promise');
+const request = require('@cypress/request-promise');
 const { SENDER_ID, SERVER_KEY } = require('./keys');
 const { register, listen } = require('../src/index');
 
