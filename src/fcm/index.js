@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const request = require('request-promise');
+const request = require('@cypress/request-promise');
 const { escape } = require('../utils/base64');
 
 const FIREBASE_INSTALLATION =

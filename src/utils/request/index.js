@@ -1,4 +1,4 @@
-const request = require('request-promise');
+const request = require('@cypress/request-promise');
 const { waitFor } = require('../timeout');
 
 // In seconds

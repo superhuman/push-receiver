@@ -1,6 +1,6 @@
 // Note: The send endpoint is deprecated and removed as of June 20, 2024: https://firebase.google.com/support/faq#fcm-depr-features
 
-const request = require('request-promise');
+const request = require('@cypress/request-promise');
 const argv = require('yargs').argv;
 
 const serverKey = argv.serverKey;
