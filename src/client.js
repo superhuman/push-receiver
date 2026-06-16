@@ -16,6 +16,11 @@ const { load } = require('protobufjs');
 const HOST = 'mtalk.google.com';
 const PORT = 5228;
 const MAX_RETRY_TIMEOUT = 15;
+const DECRYPTION_ERRORS_TO_REPORT = [
+  'Unsupported state or unable to authenticate data',
+  'crypto-key is missing',
+  'salt is missing',
+];
 
 let proto = null;
 
@@ -191,24 +196,11 @@ module.exports = class Client extends EventEmitter {
     try {
       message = decrypt(object, this._credentials.keys);
     } catch (error) {
-      switch (true) {
-        case error.message.includes(
-          'Unsupported state or unable to authenticate data'
-        ):
-        case error.message.includes('crypto-key is missing'):
-        case error.message.includes('salt is missing'):
-          // NOTE(ibash) Periodically we're unable to decrypt notifications. In
-          // all cases we've been able to receive future notifications using the
-          // same keys. So, we silently drop this notification.
-          console.warn(
-            'Message dropped as it could not be decrypted: ' + error.message
-          );
-          this._persistentIds.push(object.persistentId);
-          return;
-        default: {
-          throw error;
-        }
+      if (isReportableDecryptionError(error)) {
+        this._persistentIds.push(object.persistentId);
       }
+      this._emitError(error);
+      return;
     }
 
     // Maintain persistentIds updated with the very last received value
@@ -220,4 +212,15 @@ module.exports = class Client extends EventEmitter {
       persistentId : object.persistentId,
     });
   }
+
+  _emitError(error) {
+    // Let Parser advance past this packet before consumers handle the error.
+    setImmediate(() => this.emit('error', error));
+  }
 };
+
+function isReportableDecryptionError(error) {
+  return DECRYPTION_ERRORS_TO_REPORT.some(message =>
+    error.message.includes(message)
+  );
+}
