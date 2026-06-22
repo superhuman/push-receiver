@@ -16,11 +16,6 @@ const { load } = require('protobufjs');
 const HOST = 'mtalk.google.com';
 const PORT = 5228;
 const MAX_RETRY_TIMEOUT = 15;
-const DECRYPTION_ERRORS_TO_REPORT = [
-  'Unsupported state or unable to authenticate data',
-  'crypto-key is missing',
-  'salt is missing',
-];
 
 let proto = null;
 
@@ -220,7 +215,9 @@ module.exports = class Client extends EventEmitter {
 };
 
 function isReportableDecryptionError(error) {
-  return DECRYPTION_ERRORS_TO_REPORT.some(message =>
-    error.message.includes(message)
-  );
+  return [
+    'Unsupported state or unable to authenticate data',
+    'crypto-key is missing',
+    'salt is missing',
+  ].some(message => error.message.includes(message));
 }
