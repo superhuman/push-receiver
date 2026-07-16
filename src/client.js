@@ -219,5 +219,7 @@ function isReportableDecryptionError(error) {
     'Unsupported state or unable to authenticate data',
     'crypto-key is missing',
     'salt is missing',
+    'has no dh parameter',
+    'has no salt parameter',
   ].some(message => error.message.includes(message));
 }
