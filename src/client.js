@@ -174,12 +174,22 @@ module.exports = class Client extends EventEmitter {
 
   _onMessage({ tag, object }) {
     if (tag === kLoginResponseTag) {
-      // clear persistent ids, as we just sent them to the server while logging
-      // in
-      this._persistentIds = [];
+      // A LoginResponse with an error means the server did not process our
+      // receivedPersistentId list, so the ids are not acked yet.
+      if (!object.error) {
+        this._persistentIds = [];
+        this._emitPersistentIds();
+      }
+      this.emit('loginResponse', object);
     } else if (tag === kDataMessageStanzaTag) {
       this._onDataMessage(object);
     }
+  }
+
+  // Emits a snapshot so consumers can mirror the list (e.g. to disk) without
+  // sharing the mutable array.
+  _emitPersistentIds() {
+    this.emit('persistentIds', this._persistentIds.slice());
   }
 
   _onDataMessage(object) {
@@ -193,6 +203,7 @@ module.exports = class Client extends EventEmitter {
     } catch (error) {
       if (isReportableDecryptionError(error)) {
         this._persistentIds.push(object.persistentId);
+        this._emitPersistentIds();
       }
       this._emitError(error);
       return;
@@ -200,6 +211,9 @@ module.exports = class Client extends EventEmitter {
 
     // Maintain persistentIds updated with the very last received value
     this._persistentIds.push(object.persistentId);
+    // Deliver the id before the notification so a consumer that persists ids
+    // never handles a message it has not recorded yet.
+    this._emitPersistentIds();
     // Send notification
     this.emit('ON_NOTIFICATION_RECEIVED', {
       notification : message,
