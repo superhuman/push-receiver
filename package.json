@@ -1,6 +1,6 @@
 {
   "name": "@superhuman/push-receiver",
-  "version": "2.1.7",
+  "version": "2.1.8",
   "description": "A module to subscribe to GCM/FCM and receive notifications within a node process.",
   "main": "src/index.js",
   "scripts": {
@@ -59,7 +59,7 @@
   "dependencies": {
     "http_ece": "^1.0.5",
     "long": "^3.2.0",
-    "protobufjs": "^6.8.0",
+    "protobufjs": "^7.5.5",
     "@cypress/request": "3.0.6",
     "@cypress/request-promise": "5.0.0",
     "uuid": "^3.1.0"
